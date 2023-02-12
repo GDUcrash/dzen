@@ -1,8 +1,10 @@
 import Lexer from "./lexer/lexer";
 import parser from "./parser/parser";
+import Interpreter from "./interpreter/interpreter";
 
 import Error from "./classes/error";
 import Token from "./lexer/token";
+import { ASTNode } from "./parser/ast";
 
 const lexer = new Lexer(`
 /* "now" can be task's startRange.start, startRange.end, endRange.start, endRange.end or reminder's date
@@ -72,7 +74,22 @@ result.forEach(token => {
 console.log(queries);
 
 // parse each query
+const asts: ASTNode[] = [];
 queries.forEach(query => {
     const result = parser.parse(query);
-    console.log(result.toString());
+    if (result instanceof Error)
+        console.log(result.toString());
+    else
+        asts.push(result);
+});
+
+// execute each query
+const interpreter = new Interpreter();
+interpreter.setContext({ now: new Date() });
+asts.forEach(ast => {
+    const result = interpreter.interpret(ast);
+    if (result instanceof Error)
+        console.log(result.toString());
+    else
+        console.log(result.toLocaleDateString());
 });

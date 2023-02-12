@@ -1,18 +1,6 @@
-export type DayOfWeek = 
-| 'sunday' 
-| 'monday' 
-| 'tuesday' 
-| 'wednesday' 
-| 'thursday' 
-| 'friday' 
-| 'saturday';
+import { DayOfWeek, DAYS_OF_WEEK } from "./constants";
 
-
-
-export const daysOfWeek: DayOfWeek[] = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-export const months = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
-
-export const monthsDays = {
+const monthsDays = {
     31: [0, 2, 4, 6, 7, 9, 11],
     30: [3, 5, 8, 10],
     29: [1]
@@ -30,7 +18,7 @@ export const roundDownToDay = (date: Date) => {
 
 export const getNearestWeekday = (now: Date, weekday: DayOfWeek) => {
     const today = now.getDay();
-    const targetDay = daysOfWeek.indexOf(weekday);
+    const targetDay = DAYS_OF_WEEK.indexOf(weekday);
     const newDate = roundDownToDay(now);
     
     if (today === targetDay) {

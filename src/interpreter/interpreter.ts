@@ -1,15 +1,15 @@
 import { 
-    ASTNode, QueryNode, CommandNode,
+    ASTNode, QueryNode,
     RelativeCommandNode, AbsoluteCommandNode, JsCommandNode,
     NumberNode, UnitNode, DayOfWeekNode, DateNode, MonthNode
 } from "../parser/ast";
 import { 
-    roundDownToDay, daysOfWeek, months, DayOfWeek,
+    roundDownToDay,
     getNearestWeekday, getNearestDate, getNearestMonthDate,
     isDayKeyword, isWeekKeyword, isMonthKeyword, isYearKeyword,
 } from "./util";
 import {
-    UNIT_DAY, UNIT_WEEK, UNIT_MONTH, UNIT_YEAR,
+    UNIT_DAY, UNIT_WEEK, UNIT_MONTH, UNIT_YEAR, MONTHS, DayOfWeek
 } from "./constants";
 import Error from "../classes/error";
 
@@ -111,10 +111,18 @@ export default class Interpreter {
         let newDate: Date;
         if (dayOfWeek) {
             newDate = getNearestWeekday(now, dayOfWeek);
-        } else if (date) {
-            newDate = getNearestDate(now, date);
         } else if (month && date) {
-            newDate = getNearestMonthDate(now, month, date);
+            try {
+                newDate = getNearestMonthDate(now, month, date);
+            } catch (e) {
+                return Error.runtime('Invalid day of month. The date should be between 1 and the number of days in the month');
+            }    
+        } else if (date) {
+            try {
+                newDate = getNearestDate(now, date);
+            } catch (e) {
+                return Error.runtime('Invalid day of month. The date should be between 1 and 31');
+            }
         } else {
             return Error.runtime(`Unknown absolute command: ${node}`);
         }
@@ -153,7 +161,7 @@ export default class Interpreter {
     }
 
     passMonth = (node: MonthNode) => {
-        return node.value.value;
+        return MONTHS.indexOf(node.value.value);
     }
 
 }
