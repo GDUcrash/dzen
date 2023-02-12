@@ -10,7 +10,11 @@
     "prepare": "npm run build"
   },
   "files": [
-    "lib/**/*"
+    "lib/**/*",
+    "README.md",
+    "LICENSE",
+    "package.json",
+    "package-lock.json"
   ],
   "author": "Ucrash",
   "license": "ISC",
