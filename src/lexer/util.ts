@@ -1,7 +1,7 @@
 import { WORD, NUMERIC, KEYWORDS, SYMBOLS, COMMENT_START, COMMENT_END } from "./constants";
 
 export const isWhitespace = (char: string) => char.trim() !== char;
-export const isWord       = (char: string) => WORD.includes(char);
+export const isWord       = (char: string) => WORD.includes(char.toLowerCase());
 export const isNumeric    = (char: string) => NUMERIC.includes(char);
 
 export const isKeyword = (str: string) => KEYWORDS.includes(str);

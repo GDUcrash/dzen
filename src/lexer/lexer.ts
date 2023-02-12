@@ -116,7 +116,7 @@ export default class Lexer {
         let ps = this.current.pos.clone();
 
         while (this.current.char && isWord(this.current.char)) {
-            let char = this.current.char;
+            let char = this.current.char.toLowerCase();
             w += char;
             this.next();
         }
@@ -145,7 +145,7 @@ export default class Lexer {
 
         const [ suffix, advance ] = this.selectNext(2);
 
-        if (NUMERIC_SUFFIXES.includes(suffix)) {
+        if (NUMERIC_SUFFIXES.includes(suffix.toLowerCase())) {
             token = new Token(TOKEN_DATE, n);
             advance();
         } else {

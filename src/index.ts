@@ -23,8 +23,8 @@ const lexer = new Lexer(`
 // relative commands (add days to the "now")
 
 every day     // now + 1d
-every 2 days  // now + 2d
-every week    // now + 7d
+EVERY 2 DAYS  // now + 2d
+eVerY WeEk    // now + 7d
 every month   // now + 1m
 every year    // now + 1y
 every 5 years // now + 5y
@@ -42,20 +42,20 @@ every sunday
 every monday, tuesday, wednesday
 
 every 8th
-every 1st, 10th, 16th
+every 1sT, 10Th, 16th
 
 every 32nd // error
 every 8th, 10th, 32nd // error
 
-every february 8th
-every january 1st, 2nd, february 11th, 12th, march 21st, 22nd
+every february 8TH
+every january 1st, 2Nd, february 11th, 12th, march 21st, 22nd
 `);
 
 const [ result, text ] = lexer.tokenize();
 
 if (result instanceof Error) {
     console.log(result.toString());
-    process.exit(1);
+    process.exit(0);
 }
 
 // split the result at every "every" keyword
