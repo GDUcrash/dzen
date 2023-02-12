@@ -95,7 +95,9 @@ queries.forEach(query => {
 
 // execute each query
 const interpreter = new Interpreter();
-interpreter.setContext({ now: new Date() });
+interpreter.setContext({ now: new Date(), settings: {
+    allowUnsafeCodeExecution: true
+} });
 asts.forEach(ast => {
     const result = interpreter.interpret(ast);
     if (result instanceof Error)

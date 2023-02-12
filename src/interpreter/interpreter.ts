@@ -134,8 +134,23 @@ export default class Interpreter {
         if (!this.context.settings.allowUnsafeCodeExecution) 
             return Error.runtime('Unsafe code execution is not allowed. If you want to allow it, you can do so in the context\'s settings.');
         else {
-            // TODO: Implement this
-            return new Date();
+            const code = node.code.value;
+            let resFunc: any;
+            try {
+                resFunc = eval(code);
+            } catch (e) {
+                return Error.runtime(`Error while executing JS code: ${e}`);
+            }
+            if (typeof resFunc !== 'function') return Error.runtime('JS code must return a function');
+
+            const res = resFunc(this.context.now);
+            if (typeof res !== 'number' || isNaN(res)) return Error.runtime('JS code must return a number of days');
+            if (res < 1 || res > 9999) return Error.runtime('JS code must return a number of days between 1 and 9999');
+
+            const now = roundDownToDay(this.context.now);
+            const addDays = Math.floor(res);
+            now.setDate(now.getDate() + addDays);
+            return now;
         }
     }
 
