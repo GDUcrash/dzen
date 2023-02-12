@@ -9,7 +9,7 @@ Yeah.. don't know how to describe it better. The language executes your query an
 // "everyday" and "daily" are shorthands for "every day"
 // "weekly" is a shorthand for "every week"
 // "monthly" is a shorthand for "every month"
-// "yearly" and "annualy" are shorthands for "every year"
+// "yearly" and "annually" are shorthands for "every year"
 // oh, and also this thing is completely case-insensitive
 
 

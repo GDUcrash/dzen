@@ -1,6 +1,6 @@
 {
   "name": "dzen",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A query language for describing repeating intervals",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
