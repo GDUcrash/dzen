@@ -1,10 +1,14 @@
 import Token from "../lexer/token";
 
-export class QueryNode {
+export class ASTNode {
+    type = "node";
+}
+export class QueryNode extends ASTNode {
     type = "query";
     commands: CommandNode[];
 
     constructor (commands: CommandNode[]) {
+        super();
         this.commands = commands;
     }
 
@@ -13,7 +17,7 @@ export class QueryNode {
     }
 }
 
-export abstract class CommandNode {
+export abstract class CommandNode extends ASTNode {
     type = "command";
 }
 
@@ -76,11 +80,12 @@ export class JsCommandNode extends CommandNode {
     }
 }
 
-export class NumberNode {
+export class NumberNode extends ASTNode {
     type = "number";
     value: Token;
 
     constructor (value: Token) {
+        super();
         this.value = value;
     }
 
@@ -90,11 +95,12 @@ export class NumberNode {
 }
 
 
-export class UnitNode {
+export class UnitNode extends ASTNode {
     type = "unit";
     value: Token;
 
     constructor (value: Token) {
+        super();
         this.value = value;
     }
 
@@ -103,11 +109,12 @@ export class UnitNode {
     }
 }
 
-export class DayOfWeekNode {
+export class DayOfWeekNode extends ASTNode {
     type = "dayOfWeek";
     value: Token;
 
     constructor (value: Token) {
+        super();
         this.value = value;
     }
 
@@ -116,11 +123,12 @@ export class DayOfWeekNode {
     }
 }
 
-export class DateNode {
+export class DateNode extends ASTNode {
     type = "date";
     value: Token;
 
     constructor (value: Token) {
+        super();
         this.value = value;
     }
 
@@ -129,11 +137,12 @@ export class DateNode {
     }
 }
 
-export class MonthNode {
+export class MonthNode extends ASTNode {
     type = "month";
     value: Token;
 
     constructor (value: Token) {
+        super();
         this.value = value;
     }
 
