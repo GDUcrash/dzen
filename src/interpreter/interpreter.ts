@@ -11,7 +11,7 @@ import {
 import {
     UNIT_DAY, UNIT_WEEK, UNIT_MONTH, UNIT_YEAR, MONTHS, DayOfWeek
 } from "./constants";
-import Error from "../classes/error";
+import DzenError from "../classes/error";
 
 export type InterpreterContext = {
     now: Date;
@@ -20,7 +20,7 @@ export type InterpreterContext = {
     }
 }
 
-export type InterpreterResult = Date|Error;
+export type InterpreterResult = Date|DzenError;
 
 export default class Interpreter {
 
@@ -57,7 +57,7 @@ export default class Interpreter {
             case 'dayOfWeek': res = this.passDayOfWeek(ast as DayOfWeekNode); break;
             case 'date': res = this.passDate(ast as DateNode); break;
             case 'month': res = this.passMonth(ast as MonthNode); break;
-            default: Error.runtime(`Unknown node type: ${nodeType}`);
+            default: DzenError.runtime(`Unknown node type: ${nodeType}`, ast.range);
         }
 
         return res!;
@@ -68,7 +68,7 @@ export default class Interpreter {
 
         for (const command of node.commands) {
             let newRes = this.pass(command);
-            if (newRes instanceof Error) return newRes;
+            if (newRes instanceof DzenError) return newRes;
             if (!res || newRes < res) res = newRes;
         }
 
@@ -77,11 +77,11 @@ export default class Interpreter {
 
     passRelativeCommand = (node: RelativeCommandNode) => {
         const now = roundDownToDay(this.context.now);
-        const quantity = node.quantity ? (this.pass(node.quantity) as number|Error) : 1;
-        const unit = this.pass(node.unit) as string|Error;
+        const quantity = node.quantity ? (this.pass(node.quantity) as number|DzenError) : 1;
+        const unit = this.pass(node.unit) as string|DzenError;
 
-        if (quantity instanceof Error) return quantity;
-        if (unit instanceof Error) return unit;
+        if (quantity instanceof DzenError) return quantity;
+        if (unit instanceof DzenError) return unit;
 
         if (unit === UNIT_DAY) {
             now.setDate(now.getDate() + quantity);
@@ -92,7 +92,7 @@ export default class Interpreter {
         } else if (unit === UNIT_YEAR) {
             now.setFullYear(now.getFullYear() + quantity);
         } else {
-            return Error.runtime(`Unknown unit: ${unit}`);
+            return DzenError.runtime(`Unknown unit: ${unit}`, node.range);
         }
 
         return now;
@@ -100,13 +100,13 @@ export default class Interpreter {
 
     passAbsoluteCommand = (node: AbsoluteCommandNode) => {
         const now = roundDownToDay(this.context.now);
-        const dayOfWeek = node.dayOfWeek ? (this.pass(node.dayOfWeek) as DayOfWeek|Error) : undefined;
-        const date = node.date ? (this.pass(node.date) as number|Error) : undefined;
-        const month = node.month ? (this.pass(node.month) as number|Error) : undefined;
+        const dayOfWeek = node.dayOfWeek ? (this.pass(node.dayOfWeek) as DayOfWeek|DzenError) : undefined;
+        const date = node.date ? (this.pass(node.date) as number|DzenError) : undefined;
+        const month = node.month ? (this.pass(node.month) as number|DzenError) : undefined;
 
-        if (dayOfWeek instanceof Error) return dayOfWeek;
-        if (date instanceof Error) return date;
-        if (month instanceof Error) return month;
+        if (dayOfWeek instanceof DzenError) return dayOfWeek;
+        if (date instanceof DzenError) return date;
+        if (month instanceof DzenError) return month;
 
         let newDate: Date;
         if (dayOfWeek) {
@@ -115,16 +115,16 @@ export default class Interpreter {
             try {
                 newDate = getNearestMonthDate(now, month, date);
             } catch (e) {
-                return Error.runtime('Invalid day of month. The date should be between 1 and the number of days in the month');
+                return DzenError.runtime('Invalid day of month. The date should be between 1 and the number of days in the month', node.range);
             }    
         } else if (date) {
             try {
                 newDate = getNearestDate(now, date);
             } catch (e) {
-                return Error.runtime('Invalid day of month. The date should be between 1 and 31');
+                return DzenError.runtime('Invalid day of month. The date should be between 1 and 31', node.range);
             }
         } else {
-            return Error.runtime(`Unknown absolute command: ${node}`);
+            return DzenError.runtime(`Unknown absolute command: ${node}`, node.range);
         }
 
         return newDate;
@@ -132,20 +132,20 @@ export default class Interpreter {
 
     passJsCommand = (node: JsCommandNode) => {
         if (!this.context.settings.allowUnsafeCodeExecution) 
-            return Error.runtime('Unsafe code execution is not allowed. If you want to allow it, you can do so in the context\'s settings.');
+            return DzenError.runtime('Unsafe code execution is not allowed. If you want to allow it, you can do so in the context\'s settings.', node.range);
         else {
             const code = node.code.value;
             let resFunc: any;
             try {
                 resFunc = eval(code);
             } catch (e) {
-                return Error.runtime(`Error while executing JS code: ${e}`);
+                return DzenError.runtime(`DzenError while executing JS code: ${e}`, node.range);
             }
-            if (typeof resFunc !== 'function') return Error.runtime('JS code must return a function');
+            if (typeof resFunc !== 'function') return DzenError.runtime('JS code must return a function');
 
             const res = resFunc(this.context.now);
-            if (typeof res !== 'number' || isNaN(res)) return Error.runtime('JS code must return a number of days');
-            if (res < 1 || res > 9999) return Error.runtime('JS code must return a number of days between 1 and 9999');
+            if (typeof res !== 'number' || isNaN(res)) return DzenError.runtime('JS code must return a number of days', node.range);
+            if (res < 1 || res > 9999) return DzenError.runtime('JS code must return a number of days between 1 and 9999', node.range);
 
             const now = roundDownToDay(this.context.now);
             const addDays = Math.floor(res);
@@ -164,7 +164,7 @@ export default class Interpreter {
         if (isWeekKeyword(val))  return UNIT_WEEK;
         if (isMonthKeyword(val)) return UNIT_MONTH;
         if (isYearKeyword(val))  return UNIT_YEAR;
-        return Error.runtime(`Unknown unit: ${val}`);
+        return DzenError.runtime(`Unknown unit: ${val}`, node.range);
     }
 
     passDayOfWeek = (node: DayOfWeekNode) => {

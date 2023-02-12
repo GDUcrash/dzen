@@ -1,6 +1,6 @@
 import { PositionRange } from "./position";
 
-export default class Error {
+export default class DzenError {
 
     details?: string;
     range?:   PositionRange;
@@ -18,23 +18,50 @@ export default class Error {
         }
     }
 
+    static syntax (details?: string, range?: PositionRange) {
+        return new DzenError('SyntaxError', details, range);
+    }
+
+    static runtime (details?: string, range?: PositionRange) {
+        return new DzenError('RuntimeError', details, range);
+    }
+
     setPos (range?: PositionRange) {
         this.range = range;
         return this;
     }
     
     toString () {
-        let result = this.type;
-        if (this.details) result += ': ' + this.details;
-        return result;
+        return this.constructErrorStr();
     }
 
-    static syntax (details?: string, range?: PositionRange) {
-        return new Error('SyntaxError', details, range);
+    protected constructErrorStr () {
+        let s = this.type;
+        if (this.range) s += ` on line ${this.range.start.line} col ${this.range.start.col}`;
+
+        if (this.details) s += `\n  > ${this.details}`;
+
+        if (this.range) {
+            const text = this.range.text?.split('\n')[this.range.start.line-1];
+            s += `\n  > ${text}`;
+
+            let underlStart = this.range.start.col-1;
+            let underlEnd = this.range.end.col;
+            if (this.range.start.line != this.range.end.line) underlEnd = text!.length;
+
+            s += this.underline(4, underlStart, underlEnd)
+        }
+
+        return s;
     }
 
-    static runtime (details?: string, range?: PositionRange) {
-        return new Error('RuntimeError', details, range);
+    protected underline (offset: number, from: number, to: number) {
+        let s = '\n';
+        let start = offset + from;
+
+        for (let i = 0; i < start; i++)     s += ' ';
+        for (let i = 0; i < to - from; i++) s += '‾';
+        return s;
     }
 
 }

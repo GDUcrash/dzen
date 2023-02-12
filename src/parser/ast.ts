@@ -1,7 +1,14 @@
 import Token from "../lexer/token";
+import { PositionRange, p } from "../classes/position";
 
 export class ASTNode {
     type = "node";
+    range?: PositionRange;
+
+    setPos (range?: PositionRange) {
+        this.range = range;
+        return this;
+    }
 }
 export class QueryNode extends ASTNode {
     type = "query";
@@ -10,6 +17,11 @@ export class QueryNode extends ASTNode {
     constructor (commands: CommandNode[]) {
         super();
         this.commands = commands;
+        this.setPos(p(
+            commands[0].range?.start!, 
+            commands[commands.length - 1].range?.end, 
+            commands[0].range?.text
+        ));
     }
 
     toString () {
@@ -34,6 +46,11 @@ export class RelativeCommandNode extends CommandNode {
         } else {
             this.unit = arg1;
         }
+        this.setPos(p(
+            this.quantity?.range?.start ?? this.unit.range?.start!,
+            this.unit.range?.end,
+            this.unit.range?.text
+        ));
     }
 
     toString () {
@@ -56,6 +73,13 @@ export class AbsoluteCommandNode extends CommandNode {
             this.month = arg1;
             this.date = arg2!;
         }
+
+        let targetNode = this.dayOfWeek ?? this.date ?? this.month;
+        this.setPos(p(
+            targetNode?.range?.start!,
+            targetNode?.range?.end,
+            targetNode?.range?.text
+        ));
     }
 
     toString () {
@@ -73,6 +97,11 @@ export class JsCommandNode extends CommandNode {
     constructor (_keyword: any, code: Token) {
         super();
         this.code = code;
+        this.setPos(p(
+            code.range?.start!,
+            code.range?.end,
+            code.range?.text
+        ));
     }
 
     toString () {
@@ -87,6 +116,11 @@ export class NumberNode extends ASTNode {
     constructor (value: Token) {
         super();
         this.value = value;
+        this.setPos(p(
+            value.range?.start!,
+            value.range?.end,
+            value.range?.text
+        ));
     }
 
     toString () {
@@ -102,6 +136,11 @@ export class UnitNode extends ASTNode {
     constructor (value: Token) {
         super();
         this.value = value;
+        this.setPos(p(
+            value.range?.start!,
+            value.range?.end,
+            value.range?.text
+        ));
     }
 
     toString () {
@@ -116,6 +155,11 @@ export class DayOfWeekNode extends ASTNode {
     constructor (value: Token) {
         super();
         this.value = value;
+        this.setPos(p(
+            value.range?.start!,
+            value.range?.end,
+            value.range?.text
+        ));
     }
 
     toString () {
@@ -130,6 +174,11 @@ export class DateNode extends ASTNode {
     constructor (value: Token) {
         super();
         this.value = value;
+        this.setPos(p(
+            value.range?.start!,
+            value.range?.end,
+            value.range?.text
+        ));
     }
 
     toString () {
@@ -144,6 +193,11 @@ export class MonthNode extends ASTNode {
     constructor (value: Token) {
         super();
         this.value = value;
+        this.setPos(p(
+            value.range?.start!,
+            value.range?.end,
+            value.range?.text
+        ));
     }
 
     toString () {

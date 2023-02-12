@@ -1,5 +1,5 @@
 import Token from "./token";
-import Error from "../classes/error";
+import DzenError from "../classes/error";
 import Position, { p } from "../classes/position";
 import {
     hasSymbolsStartWith, isComment, isCommentEnd,
@@ -15,7 +15,7 @@ export type LexerCurrentState = {
     char: string|null;
 }
 
-export type LexerPartResult = Token[]|Error;
+export type LexerPartResult = Token[]|DzenError;
 export type LexerResult = [ LexerPartResult, string|null ];
 
 
@@ -41,7 +41,10 @@ export default class Lexer {
         while (this.current.char) {
             let comment = isComment(this.text, this.current.pos.index);
 
-            if (comment) this.stripComment(comment);
+            if (comment) {
+                this.stripComment(comment);
+                textStripped += '\n';
+            }
             else textStripped += this.current.char ?? "";
 
             this.next(this.text);
@@ -71,31 +74,31 @@ export default class Lexer {
             // if numeric
             else if (isNumeric(char)) {
                 const res = this.makeToken(tokens, this.makeNumber, char);
-                if (res instanceof Error) return res;
+                if (res instanceof DzenError) return res;
             }
 
             // if start of js code
             else if (next3 == JS_BEGIN) {
                 advanceBy3();
                 const res = this.makeToken(tokens, this.makeJsCode, char);
-                if (res instanceof Error) return res;
+                if (res instanceof DzenError) return res;
             }
 
             // if word
             else if (isWord(char)) {
                 const res = this.makeToken(tokens, this.makeWord, char);
-                if (res instanceof Error) return res;
+                if (res instanceof DzenError) return res;
             }
 
             // if symbol
             else if (hasSymbolsStartWith(char)) {
                 const res = this.makeToken(tokens, this.makeSymbol, char);
-                if (res instanceof Error) return res;
+                if (res instanceof DzenError) return res;
             }
 
             // if unknown
             else {
-                return Error.syntax('Unexpected character ' + char, p(this.current.pos, this.text));
+                return DzenError.syntax('Unexpected character ' + char, p(this.current.pos, this.text));
             }
         }
 
@@ -113,7 +116,7 @@ export default class Lexer {
 
     protected makeWord = () => {
         let w = '';
-        let ps = this.current.pos.clone();
+        const ps = this.current.pos.clone();
 
         while (this.current.char && isWord(this.current.char)) {
             let char = this.current.char.toLowerCase();
@@ -122,17 +125,17 @@ export default class Lexer {
         }
 
         this.prev();
-        let pe = this.current.pos.clone();
+        const pe = this.current.pos.clone();
 
         if(isKeyword(w))
-            return new Token(TOKEN_KEYWORD, w);
+            return new Token(TOKEN_KEYWORD, w, p(ps, pe, this.textPart));
         else
-            return Error.syntax('Unexpected word ' + w, p(ps, pe, this.text));
+            return DzenError.syntax('Unexpected word ' + w, p(ps, pe, this.text));
     }
 
     protected makeNumber = () => {
         let nString = '';
-        let ps = this.current.pos.clone();
+        const ps = this.current.pos.clone();
 
         while (this.current.char && isNumeric(this.current.char)) {
             let char = this.current.char;
@@ -145,21 +148,23 @@ export default class Lexer {
 
         const [ suffix, advance ] = this.selectNext(2);
 
+        this.prev();
+        const pe = this.current.pos.clone();
+        const range = p(ps, pe, this.textPart);
+
         if (NUMERIC_SUFFIXES.includes(suffix.toLowerCase())) {
-            token = new Token(TOKEN_DATE, n);
+            token = new Token(TOKEN_DATE, n, range);
             advance();
         } else {
-            token = new Token(TOKEN_NUMBER, n);
+            token = new Token(TOKEN_NUMBER, n, range);
         }
 
-        this.prev();
-        let pe = this.current.pos.clone();
         return token;
     }
 
     protected makeJsCode = () => {
         let js = '';
-        let ps = this.current.pos.clone();
+        const ps = this.current.pos.clone();
 
         let [ next3, advanceBy3 ] = this.selectNext(3);
         while (this.current.char && next3 != JS_END) {
@@ -174,18 +179,18 @@ export default class Lexer {
         }
 
         this.prev();
-        let pe = this.current.pos.clone();
+        const pe = this.current.pos.clone();
 
         if(next3 != JS_END)
-            return Error.syntax('Unexpected end of file', p(ps, this.current.pos.prev(), this.text));
+            return DzenError.syntax('Unexpected end of file', p(ps, this.current.pos.prev(), this.text));
            
         advanceBy3();
-        return new Token(TOKEN_JSCODE, js);
+        return new Token(TOKEN_JSCODE, js, p(ps, pe, this.textPart));
     }
 
     protected makeSymbol = () => {
         let s = '';
-        let ps = this.current.pos.clone();
+        const ps = this.current.pos.clone();
 
         while (this.current.char && hasSymbolsStartWith(s)) {
             let char = this.current.char;
@@ -194,12 +199,12 @@ export default class Lexer {
         }
 
         this.prev();
-        let pe = this.current.pos.clone();
+        const pe = this.current.pos.clone();
         s = s.slice(0, -1);
         if (isSymbol(s))
-            return new Token(SYMBOLS[s]);
+            return new Token(SYMBOLS[s], undefined, p(ps, pe, this.textPart));
         else
-            return Error.syntax('Unexpected token ' + s, p(ps, pe, this.text));
+            return DzenError.syntax('Unexpected token ' + s, p(ps, pe, this.text));
     }
 
     protected stripComment = (end: any) => {
@@ -208,9 +213,6 @@ export default class Lexer {
             this.next(this.text);
         }
 
-        // if the end symbol is a new line, don't strip it
-        if (this.current.char == '\n') return;
-        // otherwise do
         for (let i = 0; i < end.length; i++) this.next(this.text);
 
         // back up by one
