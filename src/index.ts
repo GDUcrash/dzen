@@ -49,6 +49,14 @@ every 8th, 10th, 32nd // error
 
 every february 8TH
 every january 1st, 2Nd, february 11th, 12th, march 21st, 22nd
+
+
+everyday
+daily
+weekly
+monthly
+yearly
+annually
 `);
 
 const [ result, text ] = lexer.tokenize();
@@ -59,7 +67,9 @@ if (result instanceof Error) {
 }
 
 // split the result at every "every" keyword
-const isEvery = (token: any) => token.type === "KEYWORD" && token.value === "every";
+const isEvery = (token: any) => (
+    token.type === "KEYWORD" && 
+    ['every', 'everyday', 'daily', 'weekly', 'monthly', 'yearly', 'annually'].includes(token.value));
 const queries: Token[][] = [];
 let currentQuery: Token[] = [];
 

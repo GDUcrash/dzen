@@ -4,6 +4,7 @@ import {
     RelativeCommandNode, AbsoluteCommandNode, JsCommandNode,
     NumberNode, UnitNode, DayOfWeekNode, DateNode, MonthNode
 } from "./ast";
+import Token from "../lexer/token";
 
 const grammar = new Grammar();
 
@@ -12,10 +13,25 @@ const queryDataFilter = (data: any[]) => {
     return new QueryNode(data);
 }
 
+const queryEvery = (word: string) => {
+    return new QueryNode([
+        new RelativeCommandNode(new UnitNode(
+            new Token("KEYWORD", word)
+        ))
+    ]);
+}
+
 grammar.rule("query").from("@KEYWORD:every").blockLoop("$command", "@SEP").decide(queryDataFilter);
 grammar.rule("query").from("@KEYWORD:every", "$command").decide(queryDataFilter);
 grammar.rule("query").blockLoop("$command", "@SEP").decide(queryDataFilter);
 grammar.rule("query").from("$command").decide(queryDataFilter);
+
+grammar.rule("query").from("@KEYWORD:everyday").decide(() => queryEvery("day"));
+grammar.rule("query").from("@KEYWORD:daily").decide(() => queryEvery("day"));
+grammar.rule("query").from("@KEYWORD:weekly").decide(() => queryEvery("week"));
+grammar.rule("query").from("@KEYWORD:monthly").decide(() => queryEvery("month"));
+grammar.rule("query").from("@KEYWORD:yearly").decide(() => queryEvery("year"));
+grammar.rule("query").from("@KEYWORD:annually").decide(() => queryEvery("year"));
 
 grammar.rule("command").from("$relativeCommand").pass();
 grammar.rule("command").from("$absoluteCommand").pass();
