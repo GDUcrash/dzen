@@ -1,6 +1,6 @@
 {
   "name": "dzen",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "A query language for describing repeating intervals",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -25,5 +25,20 @@
   },
   "dependencies": {
     "parseit.js": "^0.1.5"
-  }
+  },
+  "keywords": [
+    "dzen",
+    "interval",
+    "query",
+    "language",
+    "time",
+    "date",
+    "cron",
+    "schedule",
+    "recurring",
+    "repeating",
+    "repeat",
+    "recurrence",
+    "reoccurring"
+  ]
 }

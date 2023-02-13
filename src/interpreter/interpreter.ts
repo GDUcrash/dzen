@@ -77,11 +77,12 @@ export default class Interpreter {
 
     passRelativeCommand = (node: RelativeCommandNode) => {
         const now = roundDownToDay(this.context.now);
-        const quantity = node.quantity ? (this.pass(node.quantity) as number|DzenError) : 1;
+        const quantity = node.quantity ? (this.pass(node.quantity) as number) : 1;
         const unit = this.pass(node.unit) as string|DzenError;
 
-        if (quantity instanceof DzenError) return quantity;
         if (unit instanceof DzenError) return unit;
+        if (quantity < 1 || quantity > 9999) 
+            return DzenError.runtime(`Invalid quantity: ${quantity}`, node.range);
 
         if (unit === UNIT_DAY) {
             now.setDate(now.getDate() + quantity);
